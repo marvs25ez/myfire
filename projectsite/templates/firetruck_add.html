@@ -1,0 +1,90 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+<div class="content">
+    <div class="page-inner">
+        <div class="page-header">
+            <h4 class="page-title">Fire Trucks</h4>
+            <ul class="breadcrumbs">
+                <li class="nav-home">
+                    <a href="{%url 'dashboard-chart' %}">
+                    <i class="flaticon-home"></i>
+                    </a>
+                </li>
+                <li class="separator">
+                    <i class="flaticon-right-arrow"></i>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'firetruck-list' %}">Fire Trucks</a>
+                </li>
+                <li class="separator">
+                    <i class="flaticon-right-arrow"></i>
+                </li>
+                <li class="nav-item">
+                    <a href="#">Add</a>
+                </li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Add Fire Truck</div>
+                        <div class="card-category">Commission a new fire truck</div>
+                    </div>
+
+                    <div class="col-md-6">
+                    <div class="card-body">
+                        <form action="" method="post" novalidate>
+                            {% csrf_token %} {% include 'includes/form.html' %}
+
+                            <div class="form-group">
+                                <div class="col-md-12 col-sm-3">
+                                    <button type="submit" class="btn btn-primary btn-rounded">Submit</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Toast Container -->
+<div id="toast-container" aria-live="polite" aria-atomic="true" style="position: fixed; bottom: 20px; right: 20px; z-index: 1050">
+    <!-- Toasts will be dynamically inserted here -->
+</div>
+
+{% if messages %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        {% for message in messages %}
+        // Create a new toast element
+        const toastHTML = `
+        <div class="toast" role="alert" style="margin-bottom: 10px;" data-delay="3000">
+            <div class="toast-header">
+                <img src="{% static 'img/logo2.svg' %}" class="rounded mr-2" 
+                     style="width: 25px; height: 25px;" alt="logo">
+                <strong class="mr-auto">Bootstrap</strong>
+                <small>Just now</small>
+                <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body" style="background-color: #007BFF; color: white;">
+                {{ message|escapejs }}
+            </div>
+        </div>`;
+        
+        // Append the toast to the toast container
+        document.getElementById('toast-container').insertAdjacentHTML('beforeend', toastHTML);
+        
+        // Initialize and show the toast
+        const toastElement = document.getElementById('toast-container').lastElementChild;
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+        {% endfor %}
+    });
+</script>
+{% endif %}
+
+{% endblock %}

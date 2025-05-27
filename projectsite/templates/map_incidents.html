@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+<div class="page-inner">
+  <div class="page-header">
+    <h4 class="page-title">Fire Incidents</h4>
+    <ul class="breadcrumbs">
+      <li class="nav-home">
+        <a href="{% url 'dashboard-chart' %}">
+          <i class="flaticon-home"></i>
+        </a>
+      </li>
+      <li class="separator">
+        <i class="flaticon-right-arrow"></i>
+      </li>
+      <li class="nav-item">
+        <a href="#">Maps</a>
+      </li>
+      <li class="separator">
+        <i class="flaticon-right-arrow"></i>
+      </li>
+      <li class="nav-item">
+        <a href="">Incidents</a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Filter Dropdown -->
+  <div class="col-md-12">
+    <div class="card card-transparent">
+      <div class="card-body">
+        <div class="col-md-4 ml-auto mr-auto">
+          <label for="cityFilter">Filter by City:</label>
+          <select id="cityFilter" class="form-control">
+            <option value="all">All Cities</option>
+            <option value="PPCA">PPC A</option>
+            <option value="PPCB">PPC B</option>
+            <option value="PPCC">PPC C</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map Container -->
+  <div class="col-md-12">
+    <div class="card card-transparent">
+      <div class="card-header">
+        <h4 class="card-title text-center">Fire Incidents Map</h4>
+      </div>
+      <div class="card-body">
+        <div class="col-md-10 ml-auto mr-auto">
+          <div id="map" style="width: 100%; height: 400px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+  // Initialize the map
+  var map = L.map("map").setView([9.81644, 118.722391], 13);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Define the incident icon
+  var incidentIcon = L.icon({
+    iconUrl: "{% static 'img/fire.png' %}",
+    iconSize: [50, 50],
+    iconAnchor: [25, 50],
+    popupAnchor: [0, -50]
+  });
+
+  // Array of incidents with lat, lng, popup text, and city designation.
+  var incidentData = [
+    { lat: 9.7638, lng: 118.7473, popup: "San Pedro", city: "PPCA" },
+    { lat: 9.7461, lng: 118.7577, popup: "San Miguel", city: "PPCA" },
+    { lat: 9.7706, lng: 118.7635, popup: "San Manuel", city: "PPCB" },
+    { lat: 9.7722, lng: 118.7460, popup: "Tiniguiban", city: "PPCB" },
+    { lat: 9.8010, lng: 118.6973, popup: "Irawan", city: "PPCC" },
+    { lat: 9.6715, lng: 118.7256, popup: "Luzviminda", city: "PPCC" },
+    { lat: 9.7389, lng: 118.7336, popup: "Magkakaibigan", city: "PPCA" }
+  ];
+
+  // Layer group to hold markers
+  var markersLayer = L.layerGroup().addTo(map);
+
+  // Function to render markers based on the selected city filter
+  function renderMarkers(filterCity) {
+    markersLayer.clearLayers();
+    incidentData.forEach(function(incident) {
+      if (filterCity === "all" || incident.city === filterCity) {
+        L.marker([incident.lat, incident.lng], { icon: incidentIcon })
+          .addTo(markersLayer)
+          .bindPopup(incident.popup);
+      }
+    });
+  }
+
+  // Initial render for all incidents
+  renderMarkers("all");
+
+  // Event listener for filter changes
+  document.getElementById("cityFilter").addEventListener("change", function() {
+    renderMarkers(this.value);
+  });
+</script>
+{% endblock %}

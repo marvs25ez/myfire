@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+    /* Improved dropdown and controls styling */
+    .map-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        align-items: center;
+    }
+
+    #city-select {
+        width: 200px;
+        padding: 8px 12px;
+        border: 2px solid #6c17eb;
+        border-radius: 6px;
+        background-color: white;
+        font-size: 14px;
+        color: #333;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    #city-select:focus {
+        outline: none;
+        border-color: #3a0ca3;
+        box-shadow: 0 0 0 3px rgba(108, 23, 235, 0.2);
+    }
+
+    #goButton {
+        padding: 8px 20px;
+        background-color: #6c17eb;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    #goButton:hover {
+        background-color: #3a0ca3;
+        transform: translateY(-1px);
+    }
+
+    /* Map styling */
+    #map {
+        width: 100%;
+        height: 65vh;
+        border-radius: 8px;
+        border: 2px solid #6c17eb;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Card improvements */
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        background-color: #6c17eb;
+        color: white;
+        border-bottom: none;
+    }
+
+    .card-title {
+        font-weight: 600;
+    }
+
+    .card-category a {
+        color: #b8d1ff;
+        text-decoration: none;
+    }
+
+    .card-category a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="page-inner">
+    <div class="page-header">
+        <h4 class="page-title">Dashboard</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a href="#">
+                    <i class="flaticon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Maps</a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Stations</a>
+            </li>
+        </ul>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title text-center">Fire Incidents</h4>
+                    <p class="card-category text-center">Categorize by city and explore incidents. Developed by our partners at <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>.</p>
+                </div>
+                <div class="card-body">
+                    <div class="col-md-12">
+                        <!-- Improved dropdown container -->
+                        <div class="map-controls">
+                            <select id="city-select">
+                                <option value="" selected disabled>Select City</option>
+                                <!-- Dropdown options will be populated dynamically -->
+                            </select>
+                            <button id="goButton" type="submit">Go</button>
+                        </div>
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Function to populate city options in the dropdown menu
+    function populateCityOptions(cities) {
+        var citySelect = document.getElementById("city-select");
+        citySelect.innerHTML = ""; // Clear existing options
+
+        // Add a default option
+        var defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.text = "Select City";
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        citySelect.appendChild(defaultOption);
+
+        // Populate dropdown options with city names
+        cities.forEach(function(city) {
+            var option = document.createElement("option");
+            option.value = city.name;
+            option.text = city.name;
+            citySelect.appendChild(option);
+        });
+
+        console.log("Dropdown populated with cities:", cities);
+    }
+
+    // Function to handle "Go" button click
+    document.getElementById("goButton").addEventListener("click", function() {
+        var citySelect = document.getElementById("city-select");
+        var selectedCity = citySelect.value;
+
+        // Call the function to set map view to the selected city
+        goToCity(selectedCity);
+    });
+
+    // Function to set map view to the selected city
+    function goToCity(selectedCity) {
+        // Find the city object corresponding to the selected city
+        var selectedCityObject = markerData.find(function(city) {
+            return city.name === selectedCity;
+        });
+
+        // Check if the selected city object exists
+        if (selectedCityObject) {
+            // Extract latitude and longitude from the selected city object
+            var latitude = parseFloat(selectedCityObject.latitude);
+            var longitude = parseFloat(selectedCityObject.longitude);
+
+            // Set the map view to the coordinates of the selected city
+            map.setView([latitude, longitude], 13);
+        } else {
+            console.error('City not found:', selectedCity);
+        }
+    }
+
+    // Fetch data and populate dropdown when the page loads
+    var markerData = {{ fireIncidents|safe }};
+    populateCityOptions(markerData);
+});
+
+// Remaining JavaScript code for Leaflet map and markers
+var map = L.map('map').setView([9.81644, 118.72239], 13);
+
+var fireIcon = L.icon({
+    iconUrl: '../static/img/fireheart.png', // Replace with the correct path to your red marker icon
+    iconSize: [50, 50], // Adjust the size as needed
+});
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+// Create an array to hold all the markers
+var markers = [];
+
+// Define the marker data
+var markerData = {{ fireIncidents|safe }};
+
+console.log("Marker Data:", markerData); // Log markerData to check its structure
+
+// Loop through the marker data and create markers
+markerData.forEach(function (data) {
+    var latitude = parseFloat(data.latitude);
+    var longitude = parseFloat(data.longitude);
+
+    console.log("Latitude:", latitude, "Longitude:", longitude); // Log latitude and longitude for each marker
+
+    var marker = L.marker([latitude, longitude], { icon: fireIcon }).addTo(map);
+
+    // Create a popup and set its content
+    var popupContent = data.name;
+    var popup = L.popup().setContent(popupContent);
+
+    marker.bindPopup(popupContent);
+
+    // Bind mouseover and mouseout events to the marker
+    marker.on('mouseover', function (e) {
+        this.openPopup();
+    });
+
+    marker.on('mouseout', function (e) {
+        this.closePopup();
+    });
+
+    // Add the marker to the markers array
+    markers.push(marker);
+});
+</script>
+
+{% endblock %}

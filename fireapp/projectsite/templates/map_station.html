@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+    /* Modern Map Container */
+    #map-container {
+        position: relative;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        overflow: hidden;
+        margin-top: 20px;
+        height: 70vh;
+    }
+    
+    #map {
+        width: 100%;
+        height: 100%;
+    }
+    
+    /* Card Header Styling */
+    .map-header {
+        background: linear-gradient(135deg, #ff4d4d 0%, #cc0000 100%);
+        color: white;
+        padding: 25px 20px;
+        border-radius: 12px 12px 0 0;
+        text-align: center;
+    }
+    
+    .map-header h4 {
+        font-weight: 600;
+        margin-bottom: 5px;
+        font-size: 1.5rem;
+    }
+    
+    .map-header p {
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    .map-header a {
+        color: #ffcccc;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .map-header a:hover {
+        color: white;
+        text-decoration: underline;
+    }
+    
+    /* Custom Popup Styling */
+    .leaflet-popup-content {
+        font-size: 14px;
+        padding: 10px;
+        min-width: 150px;
+    }
+    
+    .leaflet-popup-content-wrapper {
+        border-radius: 8px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+    
+    /* Attribution Box */
+    .leaflet-control-attribution {
+        background: rgba(255,255,255,0.8) !important;
+        padding: 5px 8px !important;
+        border-radius: 4px !important;
+        font-size: 11px !important;
+    }
+    
+    /* Station Marker Icon */
+    .station-icon {
+        background: #ff4d4d;
+        border: 2px solid white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+</style>
+
+<div class="page-inner">
+    <div class="page-header">
+        <h4 class="page-title">Fire Station Network</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a href="#">
+                    <i class="flaticon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Maps</a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Stations</a>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="map-header">
+                    <h4>Fire Station Locations</h4>
+                    <p>Our network of emergency response stations. Data from <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a></p>
+                </div>
+                
+                <div class="card-body">
+                    <div id="map-container">
+                        <div id="map"></div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <small class="text-muted">Last updated: {% now "F j, Y" %}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+  var map = L.map('map').setView([9.81644, 118.72239], 13);
+
+  var truckIcon = L.icon({
+  iconUrl: '../static/img/firetruck.png', // Replace with the path to your red marker icon
+  iconSize: [50, 50], // Adjust the size as needed
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+
+  // Create an array to hold all the markers
+  var markers = [];
+
+  // Define the marker data
+  var markerData = {{ fireStations|safe }};
+
+  // Loop through the marker data and create markers
+  markerData.forEach(function (data) {
+      var latitude = parseFloat(data.latitude);
+      var longitude = parseFloat(data.longitude);
+
+      var marker = L.marker([latitude, longitude], { icon: truckIcon }).addTo(map);
+
+      // Create a popup and set its content
+      var popupContent = data.name;
+      var popup = L.popup().setContent(popupContent);
+
+      marker.bindPopup(popupContent);
+
+
+      // Bind mouseover and mouseout events to the marker
+      marker.on('mouseover', function (e) {
+          this.openPopup();
+      });
+
+      marker.on('mouseout', function (e) {
+          this.closePopup();
+      });
+
+      // Add the marker to the markers array
+      markers.push(marker);
+  });
+</script>
+{% endblock %}
+
+
